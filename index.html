@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Teste Player LoveSongs</title>
+<title>LoveSongs - Teste Manual Playlist</title>
 
 <style>
 * {
@@ -19,20 +19,21 @@ html, body {
   color: #fff;
 }
 
-/* Container principal */
-.player-container {
+.container {
   height: 100vh;
   display: flex;
   flex-direction: column;
 }
 
-/* 50% vídeo */
 .video-area {
   flex: 1;
-  position: relative;
 }
 
-/* 50% controles */
+#player {
+  width: 100%;
+  height: 100%;
+}
+
 .controls-area {
   flex: 1;
   background: #111;
@@ -40,26 +41,18 @@ html, body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 25px;
+  gap: 30px;
 }
 
-/* Iframe ocupa tudo */
-.video-area iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-/* Botões fake apenas visuais */
 .controls {
   display: flex;
-  gap: 40px;
+  gap: 30px;
 }
 
 button {
   background: #1db954;
   border: none;
-  color: white;
+  color: #fff;
   padding: 15px 25px;
   font-size: 18px;
   border-radius: 50px;
@@ -70,34 +63,122 @@ button {
 button:hover {
   background: #1ed760;
 }
-</style>
 
+.active {
+  background: #ff9800;
+}
+</style>
 </head>
+
 <body>
 
-<div class="player-container">
-
-  <!-- 50% SUPERIOR -->
+<div class="container">
   <div class="video-area">
-    <iframe
-      src="https://www.youtube-nocookie.com/embed/8RqnQKSP_Rk"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen>
-    </iframe>
+    <div id="player"></div>
   </div>
 
-  <!-- 50% INFERIOR -->
   <div class="controls-area">
     <h2>LoveSongs Test</h2>
     <div class="controls">
-      <button>⏮</button>
-      <button>▶</button>
-      <button>⏭</button>
+      <button onclick="prev()">⏮</button>
+      <button onclick="togglePlay()">▶ / ❚❚</button>
+      <button onclick="next()">⏭</button>
+      <button id="shuffleBtn" onclick="toggleShuffle()">🔀</button>
     </div>
   </div>
-
 </div>
+
+<script src="https://www.youtube.com/iframe_api"></script>
+
+<script>
+let player;
+
+const originalPlaylist = [
+  "8RqnQKSP_Rk",
+  "dQw4w9WgXcQ",
+  "3tmd-ClpJxA",
+  "l482T0yNkeo",
+  "9bZkp7q19f0"
+];
+
+let playlist = [...originalPlaylist];
+let currentIndex = 0;
+let isShuffle = false;
+
+function onYouTubeIframeAPIReady() {
+  player = new YT.Player('player', {
+    videoId: playlist[currentIndex],
+    playerVars: {
+      autoplay: 1,
+      controls: 1,
+      rel: 0,
+      modestbranding: 1
+    },
+    events: {
+      onStateChange: onPlayerStateChange
+    }
+  });
+}
+
+function onPlayerStateChange(event) {
+  if (event.data === YT.PlayerState.ENDED) {
+    next();
+  }
+}
+
+function loadVideo(index) {
+  player.loadVideoById(playlist[index]);
+}
+
+function next() {
+  currentIndex++;
+  if (currentIndex >= playlist.length) {
+    if (isShuffle) {
+      shufflePlaylist();
+    }
+    currentIndex = 0;
+  }
+  loadVideo(currentIndex);
+}
+
+function prev() {
+  currentIndex--;
+  if (currentIndex < 0) {
+    currentIndex = playlist.length - 1;
+  }
+  loadVideo(currentIndex);
+}
+
+function togglePlay() {
+  const state = player.getPlayerState();
+  if (state === YT.PlayerState.PLAYING) {
+    player.pauseVideo();
+  } else {
+    player.playVideo();
+  }
+}
+
+function toggleShuffle() {
+  isShuffle = !isShuffle;
+  const btn = document.getElementById("shuffleBtn");
+
+  if (isShuffle) {
+    shufflePlaylist();
+    btn.classList.add("active");
+  } else {
+    playlist = [...originalPlaylist];
+    btn.classList.remove("active");
+  }
+}
+
+function shufflePlaylist() {
+  playlist = [...originalPlaylist];
+  for (let i = playlist.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [playlist[i], playlist[j]] = [playlist[j], playlist[i]];
+  }
+}
+</script>
 
 </body>
 </html>
-
